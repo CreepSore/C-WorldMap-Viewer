@@ -4,5 +4,5 @@
     <add key="MapImg" val="Graphics/map2.JPG"/>
     <add key="SelectedHours" val="8"/>
     
-    <add key="FontFamily" val="Arial"/>
+    <add key="FontFamily" val="Consolas"/>
 </configuration>

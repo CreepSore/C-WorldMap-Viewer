@@ -26,9 +26,9 @@ namespace MapTime
         readonly Image MAP;
 
         // BRUSHES
-        readonly SolidBrush brush = new SolidBrush(Color.FromArgb(0x7F, 255, 0, 0));
-        readonly Pen linePen = new Pen(Color.FromArgb(0x7F, 0xFF, 0xFF, 0xFF));
+        readonly SolidBrush rectangleBrush = new SolidBrush(Color.FromArgb(0x7F, 255, 0, 0));
         readonly SolidBrush hoursBarBrush = new SolidBrush(Color.FromArgb(0x7F, Color.Black));
+        readonly Pen linePen = new Pen(Color.FromArgb(0x7F, 0xFF, 0xFF, 0xFF));
 
 
         public Form1()
@@ -62,10 +62,9 @@ namespace MapTime
             gfx.DrawImage(MAP, 0, 0, MAP.Width / (1/scale), MAP.Height / (1 / scale));
 
             // Rectangle rendering
-            float hoursToDisplay = DisplayHours;
-            float timezone = (this.Width / 24) * hoursToDisplay;
+            float timezone = (this.Width / 24) * DisplayHours;
 
-            gfx.FillRectangle(brush, startOffset - timezone / 2, 0, timezone, this.Height);
+            gfx.FillRectangle(rectangleBrush, startOffset - timezone / 2, 0, timezone, this.Height);
 
             // Handle Over-/ Underflow
             if((startOffset + timezone/2) > this.Width)
@@ -76,7 +75,7 @@ namespace MapTime
                     len -= this.Width;
                 }
 
-                gfx.FillRectangle(brush, 0, 0, len, this.Height);
+                gfx.FillRectangle(rectangleBrush, 0, 0, len, this.Height);
             }
             else if((startOffset - timezone/2) < 0)
             {
@@ -86,12 +85,11 @@ namespace MapTime
                     len += this.Width;
                 }
 
-                gfx.FillRectangle(brush, len, 0, this.Width - len, this.Height);
+                gfx.FillRectangle(rectangleBrush, len, 0, this.Width - len, this.Height);
             }
 
-            
+            // White Line
             gfx.DrawLine(linePen, startOffset, 0, startOffset, this.Height);
-
 
             // Hours Rendering
             float step = this.Width / 24;
