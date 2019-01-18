@@ -1,30 +1,49 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.ComponentModel;
+using System.Configuration;
 using System.Data;
 using System.Drawing;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Forms;
+using MapTime.Handlers;
 
 namespace MapTime
 {
     public partial class Form1 : Form
     {
+        // MISC
         float timeoffset = 0;
-        float scale = 0.75f;
         long startOffset;
+
+        float scale = 0.75f;
+
+        // CONFIG VARS
         readonly Font DEFAULT_FONT = new Font("Consolas", 9);
-        readonly Image MAP = Image.FromFile("Graphics\\map2.JPG");
+        readonly float DisplayHours;
+        readonly Image MAP;
+
+        // BRUSHES
         readonly SolidBrush brush = new SolidBrush(Color.FromArgb(0x7F, 255, 0, 0));
         readonly Pen linePen = new Pen(Color.FromArgb(0x7F, 0xFF, 0xFF, 0xFF));
         readonly SolidBrush hoursBarBrush = new SolidBrush(Color.FromArgb(0x7F, Color.Black));
 
 
-
         public Form1()
         {
+            bool configLoaded = ConfigHandler.InitConfig();
+            if (!configLoaded) {
+                throw new NullReferenceException("Config couldn't be loaded!");
+            }
+
+            scale = float.Parse(ConfigHandler.ReadKey("StartScale"), System.Globalization.NumberStyles.Any, System.Globalization.CultureInfo.InvariantCulture);
+            MAP = Image.FromFile(ConfigHandler.ReadKey("MapImg"));
+            DisplayHours = float.Parse(ConfigHandler.ReadKey("SelectedHours"), System.Globalization.NumberStyles.Any, System.Globalization.CultureInfo.InvariantCulture);
+            DEFAULT_FONT = new Font(ConfigHandler.ReadKey("FontFamily"), 9);
+
+
             InitializeComponent();
             this.MouseWheel += Form1_MouseWheel;
 
@@ -38,20 +57,17 @@ namespace MapTime
         private void Form1_Paint(object sender, PaintEventArgs e)
         {
             Graphics gfx = e.Graphics;
-            
+
+            // Drawing Image
             gfx.DrawImage(MAP, 0, 0, MAP.Width / (1/scale), MAP.Height / (1 / scale));
 
-            float lat = 35.6693863f;
-            float lng = 139.6012978f;
+            // Rectangle rendering
+            float hoursToDisplay = DisplayHours;
+            float timezone = (this.Width / 24) * hoursToDisplay;
 
-            float ly = mapRange(lat+90, 0, 180, 0, this.Height);
-            float lx = mapRange(lng+180, 0, 360, 0, this.Width);
-
-            gfx.DrawLine(Pens.White, lx, this.Height - ly - 5, lx, this.Height - ly + 5);
-            gfx.DrawLine(Pens.White, lx - 5, this.Height - ly, lx + 5, this.Height - ly);
-
-            float timezone = mapRange(timeoffset, 60*8, 60 * 24, 0, this.Width);
             gfx.FillRectangle(brush, startOffset - timezone / 2, 0, timezone, this.Height);
+
+            // Handle Over-/ Underflow
             if((startOffset + timezone/2) > this.Width)
             {
                 float len = startOffset + timezone / 2;
@@ -77,7 +93,7 @@ namespace MapTime
             gfx.DrawLine(linePen, startOffset, 0, startOffset, this.Height);
 
 
-
+            // Hours Rendering
             float step = this.Width / 24;
             float offset = startOffset;
             gfx.FillRectangle(hoursBarBrush, 0, this.Height - 22 - 15, this.Width, 22 + 15);
@@ -95,9 +111,6 @@ namespace MapTime
 
                 gfx.DrawString(i.ToString(), DEFAULT_FONT, Brushes.White, x - TextRenderer.MeasureText(i.ToString(), DEFAULT_FONT).Width / 2, this.Height - 22 - 15);
                 gfx.DrawLine(Pens.White, x, this.Height, x, this.Height - 22);
-
-                //string text = i + " ½";
-                //gfx.DrawString(text, DEFAULT_FONT, Brushes.White, x + (step / 2) - TextRenderer.MeasureText(text, DEFAULT_FONT).Width / 2, this.Height - 11 - 15);
                 gfx.DrawLine(Pens.White, x + (step / 2), this.Height, x + (step / 2), this.Height - 11);
             }
         }
@@ -107,17 +120,11 @@ namespace MapTime
             this.Refresh();
         }
 
-        private float mapRange(float value, float rmin0, float rmax0, float rmin1, float rmax1)
-        {
-            float percent0 = (value + rmin0) / rmax0;
-            float newval = (rmax1 * percent0) + (rmin1 * percent0);
 
-            return newval;
-        }
 
         private void Form1_MouseDown(object sender, MouseEventArgs e)
         {
-            float timezone = mapRange(timeoffset, 60 * 8, 60 * 24, 0, this.Width);
+            float timezone = Utils.MapRange(timeoffset, 60 * 8, 60 * 24, 0, this.Width);
             if (e.Button != MouseButtons.Left)
             {
                 return;
@@ -148,32 +155,21 @@ namespace MapTime
 
         private void Form1_MouseWheel(object sender, MouseEventArgs e)
         {
-            if (e.Delta > 0)
+            float toAdd = 0.001f;
+            if (ModifierKeys == Keys.Shift)
             {
-                float toAdd = 0.01f;
-                if (ModifierKeys == Keys.LShiftKey)
-                {
-                    toAdd = 0.1f;
-                }
-
-                this.scale += toAdd;
-                this.Height = (int)(MAP.Height / (1 / scale));
-                this.Width = (int)(MAP.Width / (1 / scale));
-                this.Refresh();
+                toAdd = 0.01f;
             }
-            else if (e.Delta < 0)
+
+            if(e.Delta < 0)
             {
-                float toSub = 0.01f;
-                if (ModifierKeys == Keys.LShiftKey)
-                {
-                    toSub = 0.1f;
-                }
-
-                this.scale -= toSub;
-                this.Height = (int)(MAP.Height / (1 / scale));
-                this.Width = (int)(MAP.Width / (1 / scale));
-                this.Refresh();
+                toAdd = -toAdd;
             }
-        }
+
+            this.scale += toAdd;
+            this.Height = (int)(MAP.Height / (1 / scale));
+            this.Width = (int)(MAP.Width / (1 / scale));
+            this.Refresh();
+         }
     }
 }
