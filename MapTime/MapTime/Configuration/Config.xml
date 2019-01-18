@@ -1,0 +1,8 @@
+﻿<?xml version="1.0" encoding="utf-8" ?>
+<configuration>
+    <add key="StartScale" val="0.5"/>
+    <add key="MapImg" val="Graphics/map2.JPG"/>
+    <add key="SelectedHours" val="8"/>
+    
+    <add key="FontFamily" val="Consolas"/>
+</configuration>
