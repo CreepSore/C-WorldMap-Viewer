@@ -1,5 +1,7 @@
 ﻿using System;
 using System.IO;
+using System.Security.Cryptography;
+using System.Windows.Forms;
 using System.Xml.Linq;
 
 namespace MapTime.Handlers
@@ -8,15 +10,37 @@ namespace MapTime.Handlers
     {
         public const string DEFAULT_CFG = "Configuration/Config.xml";
 
-        static string importedConfig = String.Empty;
+        static string latestHash = String.Empty;
         static XDocument xmlDoc;
 
+        static MD5 md5Hasher = MD5.Create();
+        static long latestReload = 0;
 
         public static bool InitConfig()
         {
+            if(Environment.TickCount - latestReload < 1000)
+            {
+                return false;
+            }
+            latestReload = Environment.TickCount;
+
             try
             {
-                xmlDoc = XDocument.Load(DEFAULT_CFG);
+                XDocument newdoc = XDocument.Load(DEFAULT_CFG);
+                string currentHash = System.BitConverter.ToString(
+                        md5Hasher.ComputeHash(
+                            System.Text.Encoding.Default.GetBytes(
+                                newdoc.ToString()
+                            )
+                        )
+                    );
+
+                if(currentHash != latestHash)
+                {
+                    xmlDoc = newdoc;
+                    latestHash = currentHash;
+                }
+
                 return true;
             }
             catch (Exception)

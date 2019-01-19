@@ -86,7 +86,9 @@
     <None Include="Configuration\Config.xml">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
-    <Compile Include="Handlers\ConfigHandler.cs" />
+    <Compile Include="Handlers\ConfigHandler.cs">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Compile>
   </ItemGroup>
   <ItemGroup>
     <None Include="App.config" />

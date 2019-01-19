@@ -21,9 +21,9 @@ namespace MapTime
         float scale = 0.75f;
 
         // CONFIG VARS
-        readonly Font DEFAULT_FONT = new Font("Consolas", 9);
-        readonly float DisplayHours;
-        readonly Image MAP;
+        Font DEFAULT_FONT = new Font("Consolas", 9);
+        float DisplayHours;
+        Image MAP;
 
         // BRUSHES
         readonly SolidBrush rectangleBrush = new SolidBrush(Color.FromArgb(0x7F, 255, 0, 0));
@@ -57,6 +57,10 @@ namespace MapTime
         private void Form1_Paint(object sender, PaintEventArgs e)
         {
             Graphics gfx = e.Graphics;
+            if(ConfigHandler.InitConfig())
+            {
+                DisplayHours = float.Parse(ConfigHandler.ReadKey("SelectedHours"), System.Globalization.NumberStyles.Any, System.Globalization.CultureInfo.InvariantCulture);
+            }
 
             // Drawing Image
             gfx.DrawImage(MAP, 0, 0, MAP.Width / (1/scale), MAP.Height / (1 / scale));
@@ -92,9 +96,9 @@ namespace MapTime
             gfx.DrawLine(linePen, startOffset, 0, startOffset, this.Height);
 
             // Hours Rendering
-            float step = this.Width / 24;
-            float offset = startOffset;
             gfx.FillRectangle(hoursBarBrush, 0, this.Height - 22 - 15, this.Width, 22 + 15);
+
+            float step = this.Width / 24;
             for(int i = -11; i <= 12; i++)
             {
                 float x = startOffset + (i * step);
