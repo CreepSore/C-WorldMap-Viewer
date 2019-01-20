@@ -1,14 +1,8 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.ComponentModel;
-using System.Configuration;
-using System.Data;
 using System.Drawing;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using System.Windows.Forms;
 using MapTime.Handlers;
+using System.Globalization;
 
 namespace MapTime
 {
@@ -39,9 +33,9 @@ namespace MapTime
                 throw new NullReferenceException("Config couldn't be loaded!");
             }
 
-            scale = float.Parse(ConfigHandler.ReadKey("StartScale"), System.Globalization.NumberStyles.Any, System.Globalization.CultureInfo.InvariantCulture);
+            scale = float.Parse(ConfigHandler.ReadKey("StartScale"), NumberStyles.Any, CultureInfo.InvariantCulture);
             MAP = Image.FromFile(ConfigHandler.ReadKey("MapImg"));
-            DisplayHours = float.Parse(ConfigHandler.ReadKey("SelectedHours"), System.Globalization.NumberStyles.Any, System.Globalization.CultureInfo.InvariantCulture);
+            DisplayHours = float.Parse(ConfigHandler.ReadKey("SelectedHours"), NumberStyles.Any, CultureInfo.InvariantCulture);
             DEFAULT_FONT = new Font(ConfigHandler.ReadKey("FontFamily"), 9);
 
             // Intialize Form
