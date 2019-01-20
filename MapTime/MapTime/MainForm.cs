@@ -12,7 +12,7 @@ using MapTime.Handlers;
 
 namespace MapTime
 {
-    public partial class Form1 : Form
+    public partial class MainForm : Form
     {
         // MISC
         float timeoffset = 0;
@@ -31,7 +31,7 @@ namespace MapTime
         readonly Pen linePen = new Pen(Color.FromArgb(0x7F, 0xFF, 0xFF, 0xFF));
 
 
-        public Form1()
+        public MainForm()
         {
             bool configLoaded = ConfigHandler.InitConfig();
             if (!configLoaded) {
@@ -43,15 +43,13 @@ namespace MapTime
             DisplayHours = float.Parse(ConfigHandler.ReadKey("SelectedHours"), System.Globalization.NumberStyles.Any, System.Globalization.CultureInfo.InvariantCulture);
             DEFAULT_FONT = new Font(ConfigHandler.ReadKey("FontFamily"), 9);
 
-
             InitializeComponent();
             this.MouseWheel += Form1_MouseWheel;
-
+            this.DoubleBuffered = true;
             this.Height = (int)(MAP.Height / (1 / scale));
             this.Width = (int)(MAP.Width / (1 / scale));
 
             startOffset = this.Width / 2;
-            this.DoubleBuffered = true;
         }
 
         private void Form1_Paint(object sender, PaintEventArgs e)
@@ -66,11 +64,11 @@ namespace MapTime
             gfx.DrawImage(MAP, 0, 0, MAP.Width / (1/scale), MAP.Height / (1 / scale));
 
             // Rectangle rendering
-            float timezone = (this.Width / 24) * DisplayHours;
+            float timezone = (this.Width / 24f) * DisplayHours;
 
             gfx.FillRectangle(rectangleBrush, startOffset - timezone / 2, 0, timezone, this.Height);
 
-            // Handle Over-/ Underflow
+            // Handle Rectangle Over-/ Underflow
             if((startOffset + timezone/2) > this.Width)
             {
                 float len = startOffset + timezone / 2;
@@ -98,7 +96,7 @@ namespace MapTime
             // Hours Rendering
             gfx.FillRectangle(hoursBarBrush, 0, this.Height - 22 - 15, this.Width, 22 + 15);
 
-            float step = this.Width / 24;
+            float step = this.Width / 24f;
             for(int i = -11; i <= 12; i++)
             {
                 float x = startOffset + (i * step);
@@ -111,7 +109,8 @@ namespace MapTime
                     x += this.Width;
                 }
 
-                gfx.DrawString(i.ToString(), DEFAULT_FONT, Brushes.White, x - TextRenderer.MeasureText(i.ToString(), DEFAULT_FONT).Width / 2, this.Height - 22 - 15);
+                Size textSize = TextRenderer.MeasureText(i.ToString(), DEFAULT_FONT);
+                gfx.DrawString(i.ToString(), DEFAULT_FONT, Brushes.White, x - (textSize.Width / 2), this.Height - 22 - textSize.Height);
                 gfx.DrawLine(Pens.White, x, this.Height, x, this.Height - 22);
                 gfx.DrawLine(Pens.White, x + (step / 2), this.Height, x + (step / 2), this.Height - 11);
             }
@@ -171,6 +170,7 @@ namespace MapTime
             this.scale += toAdd;
             this.Height = (int)(MAP.Height / (1 / scale));
             this.Width = (int)(MAP.Width / (1 / scale));
+
             this.Refresh();
          }
     }
