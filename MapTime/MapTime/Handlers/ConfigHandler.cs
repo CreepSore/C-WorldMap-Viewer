@@ -1,8 +1,8 @@
 ﻿using System;
-using System.IO;
+using System.Collections.Generic;
 using System.Security.Cryptography;
-using System.Windows.Forms;
 using System.Xml.Linq;
+using System.Globalization;
 
 namespace MapTime.Handlers
 {
@@ -66,6 +66,34 @@ namespace MapTime.Handlers
             }
 
             return String.Empty;
+        }
+
+        public static List<Location> ReadLocationList()
+        {
+            if (xmlDoc == null)
+            {
+                return null;
+            }
+
+            List<Location> locations = new List<Location>();
+
+            XElement startElem = xmlDoc.Element("configuration");
+            startElem = startElem.Element("positions");
+            foreach (XElement elem in startElem.Elements())
+            {
+                string latitude = elem.Attribute("latitude").Value;
+                string longitude = elem.Attribute("longitude").Value;
+                XAttribute nameElem = elem.Attribute("name");
+                Location toAdd = new Location(
+                    float.Parse(latitude, NumberStyles.Any, CultureInfo.InvariantCulture), 
+                    float.Parse(longitude, NumberStyles.Any, CultureInfo.InvariantCulture),
+                    nameElem != null ? nameElem.Value : String.Empty
+                );
+
+                locations.Add(toAdd);
+            }
+
+            return locations;
         }
     }
 }

@@ -87,6 +87,7 @@
     </None>
     <Compile Include="Handlers\ConfigHandler.cs">
     </Compile>
+    <Compile Include="Handlers\LocationHandler.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="App.config" />

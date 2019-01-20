@@ -18,6 +18,7 @@ namespace MapTime
         Font DEFAULT_FONT = new Font("Consolas", 9);
         float DisplayHours;
         Image MAP;
+        bool DrawPositions;
 
         // BRUSHES
         readonly SolidBrush rectangleBrush = new SolidBrush(Color.FromArgb(0x7F, 255, 0, 0));
@@ -37,6 +38,11 @@ namespace MapTime
             MAP = Image.FromFile(ConfigHandler.ReadKey("MapImg"));
             DisplayHours = float.Parse(ConfigHandler.ReadKey("SelectedHours"), NumberStyles.Any, CultureInfo.InvariantCulture);
             DEFAULT_FONT = new Font(ConfigHandler.ReadKey("FontFamily"), 9);
+            DrawPositions = Boolean.Parse(ConfigHandler.ReadKey("DrawPositions"));
+            foreach(Location loc in ConfigHandler.ReadLocationList()) 
+            {
+                LocationHandler.AddLocation(loc);
+            }
 
             // Intialize Form
             InitializeComponent();
@@ -106,11 +112,22 @@ namespace MapTime
             gfx.DrawLine(linePen, startOffset, 0, startOffset, this.Height);
         }
 
+        private void RenderPositions(Graphics gfx)
+        {
+            foreach(Location loc in LocationHandler.SavedLocations) {
+                float x = Utils.MapRange(loc.Latitude, -180, 180, 0, this.Width);
+                float y = Utils.MapRange(loc.Longitude, -90, 90, this.Height, 0);
+
+                gfx.FillEllipse(Brushes.Red, x - 2, y - 2, 4, 4);
+            }
+        }
 
         #region ---- EVENTS ----
         private void Form1_Paint(object sender, PaintEventArgs e)
         {
             Graphics gfx = e.Graphics;
+            gfx.SmoothingMode = System.Drawing.Drawing2D.SmoothingMode.AntiAlias;
+
             if(ConfigHandler.InitConfig())
             {
                 DisplayHours = float.Parse(ConfigHandler.ReadKey("SelectedHours"), System.Globalization.NumberStyles.Any, System.Globalization.CultureInfo.InvariantCulture);
@@ -124,6 +141,12 @@ namespace MapTime
 
             // Hours Rendering
             this.RenderHourScale(gfx);
+
+            // Render Positions
+            if (DrawPositions)
+            {
+                this.RenderPositions(gfx);
+            }
         }
 
         private void Form1_ResizeEnd(object sender, EventArgs e)
