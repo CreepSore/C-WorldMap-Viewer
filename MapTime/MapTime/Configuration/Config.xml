@@ -5,7 +5,7 @@
     <add key="FontFamily"    val="Consolas"/>
     
     <add key="MapImg"        val="Graphics/map2.JPG"/>
-    <add key="MapNullPos" x="[width]/2-1" y="[height]/2-1"/>
+    <add key="MapNullPos" x="[hwidth]-0.5" y="[hheight]-0.5"/>
   
     <add key="DrawPositions" val="true"/>
     <positions>

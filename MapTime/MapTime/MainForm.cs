@@ -168,11 +168,11 @@ namespace MapTime
         {
             foreach (Location loc in LocationHandler.SavedLocations)
             {
-                float x = Utils.MapRange(loc.Longitude, -180, 180, 0, this.Width);
-                float y = Utils.MapRange(loc.Latitude, -90, 90, this.Height, 0);
+                float x = Utils.MapRange(loc.Longitude, -180, 0, zeroPosX, this.Width);
+                float y = Utils.MapRange(loc.Latitude, -90, 0, this.Height, zeroPosY);
 
-                float toDrawX = zeroPosX*2 + x;
-                float toDrawY = zeroPosY*2 + y;
+                float toDrawX = zeroPosX + x;
+                float toDrawY = y;
 
                 while(toDrawX < 0)
                 {
