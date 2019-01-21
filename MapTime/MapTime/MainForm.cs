@@ -115,8 +115,8 @@ namespace MapTime
         private void RenderPositions(Graphics gfx)
         {
             foreach(Location loc in LocationHandler.SavedLocations) {
-                float x = Utils.MapRange(loc.Latitude, -180, 180, 0, this.Width);
-                float y = Utils.MapRange(loc.Longitude, -90, 90, this.Height, 0);
+                float x = Utils.MapRange(loc.Longitude, -180, 180, 0, this.Width);
+                float y = Utils.MapRange(loc.Latitude, -90, 90, this.Height, 0);
 
                 gfx.FillEllipse(Brushes.Red, x - 2, y - 2, 4, 4);
             }
