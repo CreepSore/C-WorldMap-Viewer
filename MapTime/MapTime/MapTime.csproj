@@ -91,13 +91,7 @@
     <Compile Include="Handlers\LocationHandler.cs" />
   </ItemGroup>
   <ItemGroup>
-    <Content Include="Graphics\map.PNG">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </Content>
-    <Content Include="Graphics\map2.JPG">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </Content>
-    <Content Include="Graphics\map3.JPG">
+    <Content Include="Graphics\map.JPG">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>
   </ItemGroup>
