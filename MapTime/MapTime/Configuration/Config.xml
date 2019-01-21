@@ -6,12 +6,10 @@
     
     <add key="FontFamily" val="Consolas"/>
     
-    <add key="DrawPositions" val="true"/>
+    <add key="DrawPositions" val="false"/>
     <positions>
-      <!-- <add key="Middle" latitude="0" longitude="0"/> -->
-      <add key="Sydney" latitude="-33.884080" longitude="151.284222"/>
-      <add key="NewYork" latitude="40.979393" longitude="-72.112889"/>
-      <add key="Moscow" latitude="55.5807481" longitude="36.8251443"/>
-      <add key="Vienna" latitude="48.204654" longitude="16.372685"/>
+        <!-- <add key="Middle" latitude="0" longitude="0"/> -->
+        <add key="NewYork" latitude="-72.112889" longitude="40.979393"/>
+        <add key="Moscow" latitude="36.8251443" longitude="55.5807481"/>
     </positions>
 </configuration>
