@@ -1,5 +1,7 @@
 ﻿using System;
 using System.Data;
+using System.Drawing;
+using System.Windows.Media.Imaging;
 
 namespace MapTime
 {
@@ -21,6 +23,18 @@ namespace MapTime
             DataRow row = table.NewRow();
             table.Rows.Add(row);
             return float.Parse((string)row["expression"]);
+        }
+
+        public static BitmapSource CreateBitmapSourceFromBitmap(Bitmap bitmap)
+        {
+            if (bitmap == null)
+                throw new ArgumentNullException("Failed BitmapSource Creation: Source is null!");
+
+            return System.Windows.Interop.Imaging.CreateBitmapSourceFromHBitmap(
+                bitmap.GetHbitmap(),
+                IntPtr.Zero,
+                System.Windows.Int32Rect.Empty,
+                BitmapSizeOptions.FromEmptyOptions());
         }
     }
 }
