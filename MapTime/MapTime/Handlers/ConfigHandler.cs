@@ -59,13 +59,39 @@ namespace MapTime.Handlers
             XElement startElem = xmlDoc.Element("configuration");
             foreach(XElement elem in startElem.Elements())
             {
-                if(elem.Attribute("key").Value == key)
+                XAttribute ky = elem.Attribute("key");
+                if (ky != null && ky.Value == key)
                 {
                     return elem.Attribute("val").Value;
                 }
             }
 
             return String.Empty;
+        }
+
+        public static Dictionary<string, string> ReadAllKeyAttributes(string key)
+        {
+            if (xmlDoc == null)
+            {
+                return null;
+            }
+
+            XElement startElem = xmlDoc.Element("configuration");
+            foreach (XElement elem in startElem.Elements())
+            {
+                XAttribute ky = elem.Attribute("key");
+                if (ky != null && ky.Value == key)
+                {
+                    Dictionary<string, string> result = new Dictionary<string, string>();
+                    foreach(XAttribute attrib in elem.Attributes())
+                    {
+                        result.Add(attrib.Name.LocalName, attrib.Value);
+                    }
+                    return result;
+                }
+            }
+
+            return new Dictionary<string, string>();
         }
 
         public static List<Location> ReadLocationList()

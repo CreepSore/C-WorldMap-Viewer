@@ -3,6 +3,7 @@ using System.Drawing;
 using System.Windows.Forms;
 using MapTime.Handlers;
 using System.Globalization;
+using System.Collections.Generic;
 
 namespace MapTime
 {
@@ -19,6 +20,7 @@ namespace MapTime
         float DisplayHours;
         Image MAP;
         bool DrawPositions;
+        float zeroPosX, zeroPosY;
 
         // BRUSHES
         readonly SolidBrush rectangleBrush = new SolidBrush(Color.FromArgb(0x7F, 255, 0, 0));
@@ -30,7 +32,8 @@ namespace MapTime
         {
             // Importing Config
             bool configLoaded = ConfigHandler.InitConfig();
-            if (!configLoaded) {
+            if (!configLoaded)
+            {
                 throw new NullReferenceException("Config couldn't be loaded!");
             }
 
@@ -39,7 +42,8 @@ namespace MapTime
             DisplayHours = float.Parse(ConfigHandler.ReadKey("SelectedHours"), NumberStyles.Any, CultureInfo.InvariantCulture);
             DEFAULT_FONT = new Font(ConfigHandler.ReadKey("FontFamily"), 9);
             DrawPositions = Boolean.Parse(ConfigHandler.ReadKey("DrawPositions"));
-            foreach(Location loc in ConfigHandler.ReadLocationList()) 
+
+            foreach (Location loc in ConfigHandler.ReadLocationList())
             {
                 LocationHandler.AddLocation(loc);
             }
@@ -51,9 +55,57 @@ namespace MapTime
             this.Height = (int)(MAP.Height / (1 / scale));
             this.Width = (int)(MAP.Width / (1 / scale));
 
+            // Handle NullPosition
+            Dictionary<string, string> positions = ConfigHandler.ReadAllKeyAttributes("MapNullPos");
+            string zX = String.Empty, zY = String.Empty;
+            positions.TryGetValue("x", out zX);
+            positions.TryGetValue("y", out zY);
+
+            // Parsing Config keys
+            zX = zX.Replace("[hwidth]", (this.Width / 2).ToString());
+            zX = zX.Replace("[hheight]", (this.Height / 2).ToString());
+
+            zY = zY.Replace("[hwidth]", (this.Width / 2).ToString());
+            zY = zY.Replace("[hheight]", (this.Height / 2).ToString());
+
+            zX = zX.Replace("[width]", this.Width.ToString());
+            zX = zX.Replace("[height]", this.Height.ToString());
+
+            zY = zY.Replace("[width]", this.Width.ToString());
+            zY = zY.Replace("[height]", this.Height.ToString());
+
+            zeroPosX = Utils.EvaluateString(zX);
+            zeroPosY = Utils.EvaluateString(zY);
+
+            CalcNullPos();
+
             startOffset = this.Width / 2;
         }
 
+        private void CalcNullPos()
+        {
+            // Handle NullPosition
+            Dictionary<string, string> positions = ConfigHandler.ReadAllKeyAttributes("MapNullPos");
+            string zX = String.Empty, zY = String.Empty;
+            positions.TryGetValue("x", out zX);
+            positions.TryGetValue("y", out zY);
+
+            // Parsing Config keys
+            zX = zX.Replace("[hwidth]", (this.Width / 2).ToString());
+            zX = zX.Replace("[hheight]", (this.Height / 2).ToString());
+
+            zY = zY.Replace("[hwidth]", (this.Width / 2).ToString());
+            zY = zY.Replace("[hheight]", (this.Height / 2).ToString());
+
+            zX = zX.Replace("[width]", this.Width.ToString());
+            zX = zX.Replace("[height]", this.Height.ToString());
+
+            zY = zY.Replace("[width]", this.Width.ToString());
+            zY = zY.Replace("[height]", this.Height.ToString());
+
+            zeroPosX = Utils.EvaluateString(zX);
+            zeroPosY = Utils.EvaluateString(zY);
+        }
 
         private void RenderHourScale(Graphics gfx)
         {
@@ -114,11 +166,35 @@ namespace MapTime
 
         private void RenderPositions(Graphics gfx)
         {
-            foreach(Location loc in LocationHandler.SavedLocations) {
+            foreach (Location loc in LocationHandler.SavedLocations)
+            {
                 float x = Utils.MapRange(loc.Longitude, -180, 180, 0, this.Width);
                 float y = Utils.MapRange(loc.Latitude, -90, 90, this.Height, 0);
 
-                gfx.FillEllipse(Brushes.Red, x - 2, y - 2, 4, 4);
+                float toDrawX = zeroPosX*2 + x;
+                float toDrawY = zeroPosY*2 + y;
+
+                while(toDrawX < 0)
+                {
+                    toDrawX += this.Width;
+                }
+
+                while(toDrawX > this.Width)
+                {
+                    toDrawX -= this.Width;
+                }
+
+                while (toDrawY < 0)
+                {
+                    toDrawY += this.Height;
+                }
+
+                while (toDrawY > this.Height)
+                {
+                    toDrawY -= this.Height;
+                }
+
+                gfx.FillEllipse(Brushes.Red, toDrawX - 2.5f, toDrawY - 2.5f, 5, 5);
             }
         }
 
@@ -128,13 +204,13 @@ namespace MapTime
             Graphics gfx = e.Graphics;
             gfx.SmoothingMode = System.Drawing.Drawing2D.SmoothingMode.AntiAlias;
 
-            if(ConfigHandler.InitConfig())
+            if (ConfigHandler.InitConfig())
             {
                 DisplayHours = float.Parse(ConfigHandler.ReadKey("SelectedHours"), System.Globalization.NumberStyles.Any, System.Globalization.CultureInfo.InvariantCulture);
             }
 
             // Drawing Image
-            gfx.DrawImage(MAP, 0, 0, MAP.Width / (1/scale), MAP.Height / (1 / scale));
+            gfx.DrawImage(MAP, 0, 0, MAP.Width / (1 / scale), MAP.Height / (1 / scale));
 
             // Rectangle Rendering
             this.RenderRectangle(gfx);
@@ -163,7 +239,7 @@ namespace MapTime
                 return;
             }
 
-            if(ModifierKeys == Keys.Control)
+            if (ModifierKeys == Keys.Control)
             {
                 Point mouse = this.PointToScreen(e.Location);
                 this.Left = mouse.X - this.Width / 2;
@@ -173,11 +249,11 @@ namespace MapTime
             }
 
             int x = e.X;
-            if(e.X > this.Width)
+            if (e.X > this.Width)
             {
                 x = this.Width;
             }
-            else if(e.X < 0)
+            else if (e.X < 0)
             {
                 x = 0;
             }
@@ -194,7 +270,7 @@ namespace MapTime
                 toAdd = 0.01f;
             }
 
-            if(e.Delta < 0)
+            if (e.Delta < 0)
             {
                 toAdd = -toAdd;
             }
@@ -202,9 +278,13 @@ namespace MapTime
             this.scale += toAdd;
             this.Height = (int)(MAP.Height / (1 / scale));
             this.Width = (int)(MAP.Width / (1 / scale));
+            zeroPosX -= toAdd;
+            zeroPosY -= toAdd;
+
+            CalcNullPos();
 
             this.Refresh();
-         }
+        }
         #endregion ---- EVENTS ----
     }
 }
