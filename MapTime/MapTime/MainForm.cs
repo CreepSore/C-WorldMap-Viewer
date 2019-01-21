@@ -1,9 +1,9 @@
-﻿using System;
-using System.Drawing;
-using System.Windows.Forms;
-using MapTime.Handlers;
-using System.Globalization;
+﻿using MapTime.Handlers;
+using System;
 using System.Collections.Generic;
+using System.Drawing;
+using System.Globalization;
+using System.Windows.Forms;
 
 namespace MapTime
 {
@@ -20,6 +20,7 @@ namespace MapTime
         float DisplayHours;
         Image MAP;
         bool DrawPositions;
+        bool DrawNames;
         float zeroPosX, zeroPosY;
 
         // BRUSHES
@@ -42,6 +43,7 @@ namespace MapTime
             DisplayHours = float.Parse(ConfigHandler.ReadKey("SelectedHours"), NumberStyles.Any, CultureInfo.InvariantCulture);
             DEFAULT_FONT = new Font(ConfigHandler.ReadKey("FontFamily"), 9);
             DrawPositions = Boolean.Parse(ConfigHandler.ReadKey("DrawPositions"));
+            DrawNames = Boolean.Parse(ConfigHandler.ReadKey("DrawNamesBelow"));
 
             foreach (Location loc in ConfigHandler.ReadLocationList())
             {
@@ -166,6 +168,7 @@ namespace MapTime
 
         private void RenderPositions(Graphics gfx)
         {
+            Size textScales;
             foreach (Location loc in LocationHandler.SavedLocations)
             {
                 float x = Utils.MapRange(loc.Longitude, -180, 0, zeroPosX, this.Width);
@@ -194,7 +197,15 @@ namespace MapTime
                     toDrawY -= this.Height;
                 }
 
-                gfx.FillEllipse(Brushes.Red, toDrawX - 2.5f, toDrawY - 2.5f, 5, 5);
+                gfx.FillEllipse(Brushes.Red, toDrawX - 3, toDrawY - 3, 6, 6);
+                gfx.DrawEllipse(Pens.White, toDrawX - 3, toDrawY - 3, 6, 6);
+
+                if(DrawNames)
+                {
+                    textScales = TextRenderer.MeasureText(loc.Name, DEFAULT_FONT);
+                    gfx.DrawString(loc.Name, DEFAULT_FONT, Brushes.Black, toDrawX - textScales.Width / 2 + 1, toDrawY + textScales.Height / 2 + 1);
+                    gfx.DrawString(loc.Name, DEFAULT_FONT, Brushes.White, toDrawX - textScales.Width / 2, toDrawY + textScales.Height/2);
+                }
             }
         }
 
@@ -207,6 +218,8 @@ namespace MapTime
             if (ConfigHandler.InitConfig())
             {
                 DisplayHours = float.Parse(ConfigHandler.ReadKey("SelectedHours"), System.Globalization.NumberStyles.Any, System.Globalization.CultureInfo.InvariantCulture);
+                DrawPositions = Boolean.Parse(ConfigHandler.ReadKey("DrawPositions"));
+                DrawNames = Boolean.Parse(ConfigHandler.ReadKey("DrawNamesBelow"));
             }
 
             // Drawing Image
