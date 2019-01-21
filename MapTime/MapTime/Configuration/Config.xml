@@ -1,17 +1,17 @@
 ﻿<?xml version="1.0" encoding="utf-8" ?>
 <configuration>
-    <add key="StartScale" val="0.5"/>
-    <add key="MapImg" val="Graphics/map2.JPG"/>
+    <add key="StartScale"    val="0.5"/>
+    <add key="MapImg"        val="Graphics/map2.JPG"/>
     <add key="SelectedHours" val="8"/>
     
-    <add key="FontFamily" val="Consolas"/>
+    <add key="FontFamily"    val="Consolas"/>
     
     <add key="DrawPositions" val="true"/>
     <positions>
       <!-- <add key="Middle" latitude="0" longitude="0"/> -->
-      <add key="Sydney" latitude="-33.884080" longitude="151.284222"/>
-      <add key="NewYork" latitude="40.979393" longitude="-72.112889"/>
-      <add key="Moscow" latitude="55.5807481" longitude="36.8251443"/>
-      <add key="Vienna" latitude="48.204654" longitude="16.372685"/>
+      <add key="Sydney"  latitude="-33.884080" longitude="151.284222"/>
+      <add key="NewYork" latitude="40.979393"  longitude="-72.112889"/>
+      <add key="Moscow"  latitude="55.5807481" longitude="36.8251443"/>
+      <add key="Vienna"  latitude="48.204654"  longitude="16.372685"/>
     </positions>
 </configuration>
