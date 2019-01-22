@@ -4,14 +4,14 @@
   <add key="SelectedHours" val="8"/>
   <add key="FontFamily"    val="Arial"/>
 
-  <add key="MapImg"        val="Graphics/map.JPG"/>
+  <add key="MapImg" val="Graphics/map.JPG"/>
   <add key="MapOffset" x="-0.5" y="-0.5"/>
 
   <add key="DrawPositions"  val="true"/>
   <add key="DrawNamesBelow" val="true"/>
   <!-- Example City List -->
   <positions>
-    <add name="NullIsland"  latitude="0"          longitude="0"/>
+    <!--<add name="NullIsland"  latitude="0"          longitude="0"/>-->
     <add name="Sydney"  latitude="-33.884080" longitude="151.284222"/>
     <add name="NewYork" latitude="40.979393"  longitude="-72.112889"/>
     <add name="Moscow"  latitude="55.5807481" longitude="36.8251443"/>
