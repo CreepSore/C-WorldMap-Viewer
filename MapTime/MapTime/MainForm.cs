@@ -1,14 +1,9 @@
-﻿using System;
+﻿using MapTime.Handlers;
+using System;
 using System.Collections.Generic;
-using System.ComponentModel;
-using System.Configuration;
-using System.Data;
 using System.Drawing;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+using System.Globalization;
 using System.Windows.Forms;
-using MapTime.Handlers;
 
 namespace MapTime
 {
@@ -18,12 +13,17 @@ namespace MapTime
         float timeoffset = 0;
         long startOffset;
 
-        float scale = 0.75f;
+        // TIMING
+        long latestRefresh = 0;
 
         // CONFIG VARS
         Font DEFAULT_FONT = new Font("Consolas", 9);
         float DisplayHours;
         Image MAP;
+        bool DrawPositions;
+        bool DrawNames;
+        float mapOffsetX, mapOffsetY;
+        float scale;
 
         // BRUSHES
         readonly SolidBrush rectangleBrush = new SolidBrush(Color.FromArgb(0x7F, 255, 0, 0));
@@ -35,14 +35,22 @@ namespace MapTime
         {
             // Importing Config
             bool configLoaded = ConfigHandler.InitConfig();
-            if (!configLoaded) {
+            if (!configLoaded)
+            {
                 throw new NullReferenceException("Config couldn't be loaded!");
             }
 
-            scale = float.Parse(ConfigHandler.ReadKey("StartScale"), System.Globalization.NumberStyles.Any, System.Globalization.CultureInfo.InvariantCulture);
+            scale = float.Parse(ConfigHandler.ReadKey("StartScale"), NumberStyles.Any, CultureInfo.InvariantCulture);
             MAP = Image.FromFile(ConfigHandler.ReadKey("MapImg"));
-            DisplayHours = float.Parse(ConfigHandler.ReadKey("SelectedHours"), System.Globalization.NumberStyles.Any, System.Globalization.CultureInfo.InvariantCulture);
+            DisplayHours = float.Parse(ConfigHandler.ReadKey("SelectedHours"), NumberStyles.Any, CultureInfo.InvariantCulture);
             DEFAULT_FONT = new Font(ConfigHandler.ReadKey("FontFamily"), 9);
+            DrawPositions = Boolean.Parse(ConfigHandler.ReadKey("DrawPositions"));
+            DrawNames = Boolean.Parse(ConfigHandler.ReadKey("DrawNamesBelow"));
+
+            foreach (Location loc in ConfigHandler.ReadLocationList())
+            {
+                LocationHandler.AddLocation(loc);
+            }
 
             // Intialize Form
             InitializeComponent();
@@ -51,9 +59,22 @@ namespace MapTime
             this.Height = (int)(MAP.Height / (1 / scale));
             this.Width = (int)(MAP.Width / (1 / scale));
 
+            CalcNullPos();
+
             startOffset = this.Width / 2;
         }
 
+        private void CalcNullPos()
+        {
+            // Handle NullPosition
+            Dictionary<string, string> positions = ConfigHandler.ReadAllKeyAttributes("MapOffset");
+            string zX = String.Empty, zY = String.Empty;
+            positions.TryGetValue("x", out zX);
+            positions.TryGetValue("y", out zY);
+
+            mapOffsetX = Utils.EvaluateString(zX);
+            mapOffsetY = Utils.EvaluateString(zY);
+        }
 
         private void RenderHourScale(Graphics gfx)
         {
@@ -112,24 +133,75 @@ namespace MapTime
             gfx.DrawLine(linePen, startOffset, 0, startOffset, this.Height);
         }
 
+        private void RenderPositions(Graphics gfx)
+        {
+            Size textScales;
+            foreach (Location loc in LocationHandler.SavedLocations)
+            {
+                float x = Utils.MapRange(loc.Longitude, -180, 180, 0, this.Width);
+                float y = Utils.MapRange(-loc.Latitude, -90, 90, 0, this.Height);
+
+                float toDrawX = x + mapOffsetX;
+                float toDrawY = y + mapOffsetY;
+
+                while (toDrawX < 0)
+                {
+                    toDrawX += this.Width;
+                }
+
+                while(toDrawX >= this.Width)
+                {
+                    toDrawX -= this.Width;
+                }
+
+                while (toDrawY < 0)
+                {
+                    toDrawY += this.Height;
+                }
+
+                while (toDrawY >= this.Height)
+                {
+                    toDrawY -= this.Height;
+                }
+
+                gfx.FillEllipse(Brushes.Red, toDrawX - 3, toDrawY - 3, 6, 6);
+                gfx.DrawEllipse(Pens.White, toDrawX - 3, toDrawY - 3, 6, 6);
+
+                if(DrawNames)
+                {
+                    textScales = TextRenderer.MeasureText(loc.Name, DEFAULT_FONT);
+                    gfx.DrawString(loc.Name, DEFAULT_FONT, Brushes.Black, toDrawX - textScales.Width / 2 + 1, toDrawY + textScales.Height / 2 + 1);
+                    gfx.DrawString(loc.Name, DEFAULT_FONT, Brushes.White, toDrawX - textScales.Width / 2, toDrawY + textScales.Height/2);
+                }
+            }
+        }
 
         #region ---- EVENTS ----
         private void Form1_Paint(object sender, PaintEventArgs e)
         {
             Graphics gfx = e.Graphics;
-            if(ConfigHandler.InitConfig())
+
+            if (ConfigHandler.InitConfig())
             {
                 DisplayHours = float.Parse(ConfigHandler.ReadKey("SelectedHours"), System.Globalization.NumberStyles.Any, System.Globalization.CultureInfo.InvariantCulture);
+                DrawPositions = Boolean.Parse(ConfigHandler.ReadKey("DrawPositions"));
+                DrawNames = Boolean.Parse(ConfigHandler.ReadKey("DrawNamesBelow"));
+                CalcNullPos();
             }
 
             // Drawing Image
-            gfx.DrawImage(MAP, 0, 0, MAP.Width / (1/scale), MAP.Height / (1 / scale));
-
+            gfx.DrawImage(MAP, 0, 0, MAP.Width / (1 / scale), MAP.Height / (1 / scale));
             // Rectangle Rendering
             this.RenderRectangle(gfx);
 
             // Hours Rendering
             this.RenderHourScale(gfx);
+
+            // Render Positions
+            if (DrawPositions)
+            {
+                this.RenderPositions(gfx);
+            }
         }
 
         private void Form1_ResizeEnd(object sender, EventArgs e)
@@ -140,13 +212,17 @@ namespace MapTime
 
         private void Form1_MouseDown(object sender, MouseEventArgs e)
         {
-            float timezone = Utils.MapRange(timeoffset, 60 * 8, 60 * 24, 0, this.Width);
+            if(Environment.TickCount - latestRefresh < 17)
+            {
+                return;
+            }
+
             if (e.Button != MouseButtons.Left)
             {
                 return;
             }
 
-            if(ModifierKeys == Keys.Control)
+            if (ModifierKeys == Keys.Control)
             {
                 Point mouse = this.PointToScreen(e.Location);
                 this.Left = mouse.X - this.Width / 2;
@@ -156,17 +232,19 @@ namespace MapTime
             }
 
             int x = e.X;
-            if(e.X > this.Width)
+            if (e.X > this.Width)
             {
                 x = this.Width;
             }
-            else if(e.X < 0)
+            else if (e.X < 0)
             {
                 x = 0;
             }
 
             startOffset = x;
+
             this.Refresh();
+            latestRefresh = Environment.TickCount;
         }
 
         private void Form1_MouseWheel(object sender, MouseEventArgs e)
@@ -177,7 +255,7 @@ namespace MapTime
                 toAdd = 0.01f;
             }
 
-            if(e.Delta < 0)
+            if (e.Delta < 0)
             {
                 toAdd = -toAdd;
             }
@@ -186,8 +264,10 @@ namespace MapTime
             this.Height = (int)(MAP.Height / (1 / scale));
             this.Width = (int)(MAP.Width / (1 / scale));
 
+            CalcNullPos();
+
             this.Refresh();
-         }
+        }
         #endregion ---- EVENTS ----
     }
 }
